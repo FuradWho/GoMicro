@@ -5,20 +5,20 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/FuradWho/GoMicro/go_kit/endpoint"
+	"github.com/gorilla/mux"
+	log "github.com/sirupsen/logrus"
 	"net/http"
 	"strconv"
 )
 
 func DecodeUserRequest(ctx context.Context, r *http.Request) (interface{}, error) {
-	if r.URL.Query().Get("uid") != "" {
-		uid, err := strconv.Atoi(r.URL.Query().Get("uid"))
-		if err != nil {
-			return nil, err
-		}
-		return endpoint.UserRequest{Uid: uid}, nil
+	vars := mux.Vars(r) //通过这个返回一个map，map中存放的是参数key和值，因为我们路由地址是这样的/user/{uid:\d+}，索引参数是uid,访问Examp: http://localhost:8080/user/121，所以值为121
+	if uid, ok := vars["uid"]; ok {
+		uid, _ := strconv.Atoi(uid)
+		log.Infof("%+v \n", endpoint.UserRequest{Uid: uid, Method: r.Method})
+		return endpoint.UserRequest{Uid: uid, Method: r.Method}, nil
 	}
-
-	return nil, errors.New("param error")
+	return nil, errors.New("参数错误")
 }
 
 func EncodeUserResponse(ctx context.Context, w http.ResponseWriter, response interface{}) error {
