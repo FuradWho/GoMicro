@@ -15,6 +15,7 @@ type UserResponse struct {
 	Result string `json:"result"`
 }
 
+// GenUserEndPoint Decorator mode
 func GenUserEndPoint(userService service.IUserService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		r := request.(UserRequest)

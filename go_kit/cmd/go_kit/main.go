@@ -18,8 +18,11 @@ import (
 func main() {
 	fmt.Println("!!!!")
 	user := service.UserService{}
+
 	point := endpoint.GenUserEndPoint(user)
+
 	serverHandler := httpTransport.NewServer(point, transport.DecodeUserRequest, transport.EncodeUserResponse)
+	log.Infoln("httpTransport.NewServer")
 
 	r := mux.NewRouter() //使用mux来使服务支持路由
 	r.Methods("GET", "DELETE").Path(`/user/{uid:\d+}`).Handler(serverHandler)

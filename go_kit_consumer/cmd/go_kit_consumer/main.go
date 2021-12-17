@@ -9,6 +9,7 @@ import (
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/sd"
 	"github.com/go-kit/kit/sd/consul"
+	"github.com/go-kit/kit/sd/lb"
 	httpTransport "github.com/go-kit/kit/transport/http"
 	consulapi "github.com/hashicorp/consul/api"
 	"io"
@@ -37,18 +38,21 @@ func main() {
 				endpointer := sd.NewEndpointer(instancer, factory, logger)
 				endpoints, _ := endpointer.Endpoints()
 				fmt.Println("服务有", len(endpoints), "条")
-				getUserInfo := endpoints[0] //写死获取第一个
-				ctx := context.Background() //第三步：创建一个context上下文对象
 
-				//第四步：执行
-				res, err := getUserInfo(ctx, clientEndpoint.UserRequest{Uid: 101})
-				if err != nil {
-					fmt.Println(err)
-					os.Exit(1)
+				mylb := lb.NewRoundRobin(endpointer) //使用go-kit自带的轮询
+				for {
+					getUserInfo, err := mylb.Endpoint() //写死获取第一个
+					ctx := context.Background()         //第三步：创建一个context上下文对象
+					//第四步：执行
+					res, err := getUserInfo(ctx, clientEndpoint.UserRequest{Uid: 101})
+					if err != nil {
+						fmt.Println(err)
+						os.Exit(1)
+					}
+					//第五步：断言，得到响应值
+					userinfo := res.(clientEndpoint.UserResponse)
+					fmt.Println(userinfo.Result)
 				}
-				//第五步：断言，得到响应值
-				userinfo := res.(clientEndpoint.UserResponse)
-				fmt.Println(userinfo.Result)
 			}
 		}
 	}
